@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Adicionar Evento de Alimentação</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+    <style>
+        .grupo-aba {
+            margin-bottom: 10px;
+            border: 1px solid #00FF00; /* Borda verde para as abas */
+        }
+
+        .grupo-titulo {
+            background-color: #222222; /* Fundo escuro para o título da aba */
+            color: #00FF00;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .grupo-titulo::before {
+            content: "+ ";
+            font-weight: bold;
+        }
+
+        .grupo-titulo.ativo::before {
+            content: "- ";
+        }
+
+        .alimentos-lista {
+            display: none;
+            padding-left: 15px;
+            padding-bottom: 5px;
+        }
+
+        .alimentos-lista.ativo {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Adicionar Evento de Alimentação</h1>
+        <hr>
+        <form method="POST">
+            <p>
+                Selecionar Aluno Existente:
+                <select name="aluno_existente">
+                    <option value="">-- Selecione um Aluno --</option>
+                    {% for nome in alunos %}
+                        <option value="{{ nome }}">{{ nome }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p>
+                Ou Cadastrar Novo Aluno:
+                <input type="text" name="novo_aluno" placeholder="Nome do Novo Aluno">
+            </p>
+            <p>Data: <input type="date" name="data" required></p>
+            <p>Refeição:
+                <select name="refeicao">
+                    <option value="Café da Manhã">Café da Manhã</option>
+                    <option value="Almoço">Almoço</option>
+                    <option value="Lanche da Tarde">Lanche da Tarde</option>
+                </select>
+            </p>
+            <p>Alimentos Servidos:</p>
+            <div id="grupos-alimentos">
+                {% for grupo, alimentos in grupos_alimentos.items() %}
+                <div class="grupo-aba">
+                    <div class="grupo-titulo" data-grupo="{{ grupo }}">
+                        {{ grupo }}
+                    </div>
+                    <ul class="alimentos-lista" data-grupo="{{ grupo }}">
+                        {% for alimento in alimentos %}
+                        <li><input type="checkbox" name="alimentos" value="{{ alimento }}" data-grupo="{{ grupo }}"> {{ alimento }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            <p>Observações (opcional): <textarea name="observacoes"></textarea></p>
+            <button type="submit">Adicionar Evento</button>
+        </form>
+        <hr>
+        <p><a class="comando" href="{{ url_for('main.calendario') }}">Voltar para o Calendário</a></p>
+        <p><a class="comando" href="{{ url_for('main.admin') }}">Voltar para Admin</a></p>
+    </div>
+
+    <script>
+        const gruposTitulo = document.querySelectorAll('.grupo-titulo');
+
+        gruposTitulo.forEach(titulo => {
+            titulo.addEventListener('click', function() {
+                const grupo = this.dataset.grupo;
+                const listaAlimentos = document.querySelector(`.alimentos-lista[data-grupo="${grupo}"]`);
+
+                this.classList.toggle('ativo');
+                listaAlimentos.classList.toggle('ativo');
+            });
+        });
+
+        const checkboxes = document.querySelectorAll('input[name="alimentos"]');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const grupo = this.dataset.grupo;
+                const alimentoId = 'grupo-' + this.value.replace(' ', '-');
+                const grupoSpan = document.getElementById(alimentoId);
+
+                if (this.checked && grupo) {
+                    grupoSpan.textContent = '(do grupo ' + grupo + ')';
+                    grupoSpan.style.display = 'inline';
+                } else {
+                    grupoSpan.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

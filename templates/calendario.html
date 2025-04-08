@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendário de Alimentação</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Calendário de Alimentação</h1>
+        <hr>
+        <p><a class="comando" href="{{ url_for('main.adicionar_evento') }}">Adicionar Evento</a></p>
+        <hr>
+
+        {% if calendario %}
+            {% for data, eventos in calendario.items() %}
+                <h2>{{ data.strftime('%d/%m/%Y') }}</h2>
+                <ul>
+                    {% for evento in eventos %}
+                        <li>
+                            <strong>{{ evento.aluno }}</strong> - {{ evento.refeicao }}:
+                            {{ evento.alimentos|join(', ') }}
+                            {% if evento.observacoes %}
+                                (Observações: {{ evento.observacoes }})
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <hr>
+            {% endfor %}
+        {% else %}
+            <p>Nenhum evento de alimentação cadastrado ainda.</p>
+        {% endif %}
+
+        <p><a class="comando" href="{{ url_for('main.admin') }}">Voltar para Admin</a></p>
+    </div>
+</body>
+</html>

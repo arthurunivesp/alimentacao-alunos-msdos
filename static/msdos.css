@@ -1,0 +1,116 @@
+body {
+    font-family: 'Fixedsys Excelsior 3.01', monospace;
+    background-color: #000000; /* Preto */
+    color: #00FF00; /* Verde */
+    margin: 0;
+    padding: 20px;
+    line-height: 1.2;
+}
+
+.container {
+    width: 95%;
+    max-width: 800px;
+    margin: 20px auto;
+    border: 2px solid #00FF00; /* Borda verde */
+    padding: 20px;
+}
+
+h1, h2 {
+    color: #00FF00; /* Verde para títulos */
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+hr {
+    border: 1px solid #00FF00;
+    margin: 15px 0;
+}
+
+p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    font-family: 'Fixedsys Excelsior 3.01', monospace;
+    background-color: #111111; /* Preto um pouco mais claro para os campos */
+    color: #00FF00;
+    border: 1px solid #00FF00;
+    padding: 5px;
+    margin-right: 5px;
+    caret-color: #00FF00; /* Cursor verde */
+    position: relative;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus::after,
+input[type="password"]:focus::after,
+select:focus::after,
+textarea:focus::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 1em;
+    background-color: #00FF00;
+    animation: blink-caret 1s step-end infinite;
+}
+
+button,
+.comando,
+.menu a {
+    font-family: 'Fixedsys Excelsior 3.01', monospace;
+    background-color: #222222; /* Cinza escuro para botões/links */
+    color: #00FF00;
+    border: 1px solid #00FF00;
+    padding: 5px 10px;
+    margin-right: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+}
+
+a.comando:hover,
+.menu a:hover,
+button:hover {
+    text-decoration: underline;
+    background-color: #333333; /* Cinza um pouco mais claro no hover */
+}
+
+.error {
+    color: #FFFF00; /* Amarelo para mensagens de erro (mantendo um contraste) */
+    font-weight: bold;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #00FF00; /* Linha verde abaixo do menu */
+    padding-bottom: 5px;
+}
+
+.menu li {
+    display: inline;
+    margin-right: 15px;
+}
+
+/* Animação para o cursor piscando */
+@keyframes blink-caret {
+    from, to { background-color: black; }
+    50% { background-color: #00FF00; } /* Cursor verde piscando */
+}

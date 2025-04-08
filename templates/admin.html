@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ADMIN</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+    <style>
+        .grupo-aba {
+            margin-bottom: 10px;
+            border: 1px solid #00FF00; /* Borda verde para as abas */
+        }
+
+        .grupo-titulo {
+            background-color: #222222; /* Fundo escuro para o título da aba */
+            color: #00FF00;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .grupo-titulo::before {
+            content: "+ ";
+            font-weight: bold;
+        }
+
+        .grupo-titulo.ativo::before {
+            content: "- ";
+        }
+
+        .alimentos-lista {
+            display: none;
+            padding-left: 15px;
+            padding-bottom: 5px;
+        }
+
+        .alimentos-lista.ativo {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ADMINISTRAÇÃO</h1>
+        <hr>
+
+        <ul class="menu">
+            <li><a href="{{ url_for('main.admin') }}">Home</a></li>
+            <li><a href="{{ url_for('main.calendario') }}">Calendário</a></li>
+            <li><a href="{{ url_for('main.adicionar_evento') }}">Adicionar Evento</a></li>
+        </ul>
+
+        <hr>
+
+        <h2>CADASTRAR ALUNO</h2>
+        <form method="POST">
+            <p>NOME: <input type="text" name="aluno_nome" required></p>
+            <p>RESTRIÇÕES:</p>
+            <div id="grupos-alimentos">
+                {% for grupo, alimentos in grupos_alimentos.items() %}
+                <div class="grupo-aba">
+                    <div class="grupo-titulo" data-grupo="{{ grupo }}">
+                        {{ grupo }}
+                    </div>
+                    <ul class="alimentos-lista" data-grupo="{{ grupo }}">
+                        {% for alimento in alimentos %}
+                        <li>
+                            <input type="checkbox" name="restricoes" value="{{ alimento }}" data-grupo="{{ grupo }}"> {{ alimento }}
+                            <span id="grupo-{{ alimento|replace(' ', '-') }}" style="display:none; color: yellow;">(do grupo {{ grupo }})</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit">CADASTRAR</button>
+        </form>
+        <hr>
+
+        <h2>ALUNOS CADASTRADOS</h2>
+        {% if alunos %}
+        <ul>
+            {% for nome, restricoes in alunos.items() %}
+            <li><strong>{{ nome }}:</strong> {{ restricoes|join(', ') or 'NENHUMA' }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>NENHUM ALUNO CADASTRADO.</p>
+        {% endif %}
+
+        <p><a class="comando" href="{{ url_for('main.alimentacao') }}">IR PARA ALIMENTACAO</a></p>
+    </div>
+
+    <script>
+        const gruposTitulo = document.querySelectorAll('.grupo-titulo');
+
+        gruposTitulo.forEach(titulo => {
+            titulo.addEventListener('click', function() {
+                const grupo = this.dataset.grupo;
+                const listaAlimentos = document.querySelector(`.alimentos-lista[data-grupo="${grupo}"]`);
+
+                this.classList.toggle('ativo');
+                listaAlimentos.classList.toggle('ativo');
+            });
+        });
+
+        const checkboxes = document.querySelectorAll('input[name="restricoes"]');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const grupo = this.dataset.grupo;
+                const alimentoId = 'grupo-' + this.value.replace(' ', '-');
+                const grupoSpan = document.getElementById(alimentoId);
+
+                if (this.checked && grupo) {
+                    grupoSpan.textContent = '(do grupo ' + grupo + ')';
+                    grupoSpan.style.display = 'inline';
+                } else {
+                    grupoSpan.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

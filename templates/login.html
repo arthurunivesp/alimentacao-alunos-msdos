@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LOGIN</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 400px;
+            padding: 30px;
+            border: 2px solid #00FF00;
+            background-color: #111111;
+            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: #00FF00;
+            margin-bottom: 5px; /* Reduzindo a margem entre os títulos */
+            font-size: 1.8em; /* Aumentando um pouco a fonte do primeiro título */
+            line-height: 1; /* Reduzindo a altura da linha */
+        }
+
+        h2 {
+            color: #00FF00;
+            margin-top: 5px; /* Adicionando margem acima do segundo título */
+            margin-bottom: 20px; /* Adicionando margem abaixo do segundo título */
+            font-size: 1.2em; /* Reduzindo um pouco a fonte do segundo título */
+            line-height: 1;
+        }
+
+        hr {
+            border-top: 1px solid #00FF00;
+            margin: 20px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: calc(100% - 12px);
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #00FF00;
+            background-color: #000000;
+            color: #00FF00;
+            font-family: 'Fixedsys Excelsior 3.01', monospace;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #222222;
+            color: #00FF00;
+            border: 1px solid #00FF00;
+            font-family: 'Fixedsys Excelsior 3.01', monospace;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #333333;
+        }
+
+        .error {
+            color: #FFFF00;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ESCOLA SOCIAL</h1>
+        <h2>COLÉGIO MARISTA SANTOS</h2>
+        <hr>
+        <h3>LOGIN</h3>
+        <form method="POST">
+            {% if error %}
+            <p class="error">{{ error }}</p>
+            {% endif %}
+            <p>USUÁRIO: <input type="text" name="username" required></p>
+            <p>SENHA: <input type="password" name="password" required></p>
+            <button type="submit">ENTRAR</button>
+        </form>
+        <hr>
+    </div>
+</body>
+</html>

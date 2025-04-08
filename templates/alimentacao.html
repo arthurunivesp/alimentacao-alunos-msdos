@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ALIMENTACAO</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>RESPONSÁVEL PELA ALIMENTAÇÃO</h1>
+        <hr>
+
+        <form method="GET">
+            <p>Nome do Aluno:
+                <select name="aluno_nome" onchange="this.form.submit()">
+                    <option value="">Todos os Alunos</option>
+                    {% for nome in alunos %}
+                        <option value="{{ nome }}" {% if nome == aluno_selecionado %}selected{% endif %}>{{ nome }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+        </form>
+        <hr>
+
+        {% if aluno_selecionado %}
+        <h2>Eventos de Alimentação para {{ aluno_selecionado }}</h2>
+        {% if eventos_aluno %}
+        <ul>
+            {% for item in eventos_aluno %}
+            <li>
+                <strong>{{ item.data.strftime('%d/%m/%Y') }}</strong> - {{ item.evento.refeicao }}:
+                {{ item.evento.alimentos|join(', ') }}
+                {% if item.evento.observacoes %}
+                (Observações: {{ item.evento.observacoes }})
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Nenhum evento de alimentação encontrado para {{ aluno_selecionado }}.</p>
+        {% endif %}
+        <hr>
+        {% else %}
+        <h2>RESTRIÇÕES ALIMENTARES DOS ALUNOS</h2>
+        {% if alunos %}
+        <ul>
+            {% for nome, restricoes in alunos.items() %}
+            <li><strong>{{ nome }}:</strong> {{ restricoes|join(', ') or 'NENHUMA' }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>NENHUM ALUNO CADASTRADO.</p>
+        {% endif %}
+        <hr>
+        {% endif %}
+
+        {% if session and session['role'] == 'admin' %}
+        <p><a class="comando" href="{{ url_for('main.admin') }}">VOLTAR PARA ADMIN</a></p>
+        {% endif %}
+    </div>
+</body>
+</html>
