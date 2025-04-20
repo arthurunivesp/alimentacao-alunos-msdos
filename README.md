@@ -87,7 +87,7 @@ Segurança: Usar apenas para demonstração (senhas em texto plano)
 Persistência: Reinicie o servidor para limpar os dados
 
 📄 Licença
-Projeto desenvolvido para [Nome da Instituição] sob licença MIT. Consulte o arquivo LICENSE para detalhes.
+Projeto desenvolvido para [Univesp] sob licença MIT. Consulte o arquivo LICENSE para detalhes.
 
 Desenvolvido por Arthur Univesp
 
