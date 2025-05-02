@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Gerenciar Grupos de Alimentos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #123C3C; /* Azul escuro esverdeado */
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script>
+        function toggleGrupo(id) {
+            var lista = document.getElementById(id);
+            lista.classList.toggle("hidden");
+        }
+    </script>
+</head>
+<body class="bg-[#123C3C] text-white min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-white mb-6">Gerenciar Grupos de Alimentos</h1>
+
+        <!-- Adicionar Novo Grupo -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Adicionar Novo Grupo</h2>
+            <form method="POST">
+                <input type="hidden" name="acao" value="adicionar_grupo">
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Nome do Grupo</label>
+                    <input type="text" name="novo_grupo" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                           required>
+                </div>
+                <button type="submit" 
+                        class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                    Adicionar Grupo
+                </button>
+            </form>
+        </div>
+
+        <!-- Adicionar Alimento a um Grupo -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Adicionar Alimento a um Grupo</h2>
+            <form method="POST">
+                <input type="hidden" name="acao" value="adicionar_alimento">
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Selecionar Grupo</label>
+                    <select name="grupo" 
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-800" 
+                            required>
+                        {% for grupo in grupos_alimentos.keys() %}
+                            <option value="{{ grupo }}">{{ grupo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Novo Alimento</label>
+                    <input type="text" name="novo_alimento" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                           required>
+                </div>
+                <button type="submit" 
+                        class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                    Adicionar Alimento
+                </button>
+            </form>
+        </div>
+
+        <!-- Grupos e Alimentos Cadastrados (com sanfona e opção de excluir grupo) -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Grupos e Alimentos Cadastrados</h2>
+            {% if grupos_alimentos %}
+            <ul>
+                {% for grupo, alimentos in grupos_alimentos.items() %}
+                <li class="mb-4">
+                    <div class="flex items-center justify-between cursor-pointer bg-gray-200 p-3 rounded-lg hover:bg-gray-300 transition duration-300"
+                         onclick="toggleGrupo('grupo_{{ loop.index }}')">
+                        <strong class="text-gray-800">{{ grupo }}</strong>
+                        <div class="flex space-x-4">
+                            <!-- Botão Excluir Grupo -->
+                            <form method="POST">
+                                <input type="hidden" name="acao" value="excluir_grupo">
+                                <input type="hidden" name="grupo" value="{{ grupo }}">
+                                <button type="submit" class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-300">
+                                    Excluir Grupo
+                                </button>
+                            </form>
+                            <span class="text-gray-700">▼</span>
+                        </div>
+                    </div>
+
+                    <ul id="grupo_{{ loop.index }}" class="hidden mt-2 ml-6">
+                        {% for alimento in alimentos %}
+                        <li class="flex items-center mb-2">
+                            <span class="text-gray-800">{{ alimento }}</span>
+                            <form method="POST" class="ml-4">
+                                <input type="hidden" name="acao" value="excluir_alimento">
+                                <input type="hidden" name="grupo" value="{{ grupo }}">
+                                <input type="hidden" name="alimento" value="{{ alimento }}">
+                                <button type="submit" 
+                                        class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-300">
+                                    Excluir
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-600">Nenhum grupo cadastrado.</p>
+            {% endif %}
+        </div>
+
+        <div class="mt-6">
+            <a href="{{ url_for('main.admin') }}" 
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Voltar para Admin
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+
+

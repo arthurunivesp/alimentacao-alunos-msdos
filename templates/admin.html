@@ -1,122 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>ADMIN</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+    <title>Admin - Cadastro de Alunos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .grupo-aba {
-            margin-bottom: 10px;
-            border: 1px solid #00FF00; /* Borda verde para as abas */
-        }
-
-        .grupo-titulo {
-            background-color: #222222; /* Fundo escuro para o título da aba */
-            color: #00FF00;
-            padding: 5px;
-            cursor: pointer;
-        }
-
-        .grupo-titulo::before {
-            content: "+ ";
-            font-weight: bold;
-        }
-
-        .grupo-titulo.ativo::before {
-            content: "- ";
-        }
-
-        .alimentos-lista {
-            display: none;
-            padding-left: 15px;
-            padding-bottom: 5px;
-        }
-
-        .alimentos-lista.ativo {
-            display: block;
+        body {
+            background-color: #123C3C; /* Azul escuro esverdeado */
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>ADMINISTRAÇÃO</h1>
-        <hr>
+<body class="bg-[#123C3C] text-white min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-white mb-6">Admin - Cadastro de Alunos</h1>
 
-        <ul class="menu">
-            <li><a href="{{ url_for('main.admin') }}">Home</a></li>
-            <li><a href="{{ url_for('main.calendario') }}">Calendário</a></li>
-            <li><a href="{{ url_for('main.adicionar_evento') }}">Adicionar Evento</a></li>
-        </ul>
-
-        <hr>
-
-        <h2>CADASTRAR ALUNO</h2>
-        <form method="POST">
-            <p>NOME: <input type="text" name="aluno_nome" required></p>
-            <p>RESTRIÇÕES:</p>
-            <div id="grupos-alimentos">
-                {% for grupo, alimentos in grupos_alimentos.items() %}
-                <div class="grupo-aba">
-                    <div class="grupo-titulo" data-grupo="{{ grupo }}">
-                        {{ grupo }}
-                    </div>
-                    <ul class="alimentos-lista" data-grupo="{{ grupo }}">
-                        {% for alimento in alimentos %}
-                        <li>
-                            <input type="checkbox" name="restricoes" value="{{ alimento }}" data-grupo="{{ grupo }}"> {{ alimento }}
-                            <span id="grupo-{{ alimento|replace(' ', '-') }}" style="display:none; color: yellow;">(do grupo {{ grupo }})</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
+        <!-- Formulário para cadastro de alunos -->
+        <div class="bg-white p-6 rounded-lg shadow-xl mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Cadastrar Novo Aluno</h2>
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Nome do Aluno</label>
+                    <input type="text" name="aluno_nome" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                           required>
                 </div>
-                {% endfor %}
-            </div>
-            <button type="submit">CADASTRAR</button>
-        </form>
-        <hr>
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Turma</label>
+                    <select name="turma" 
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-800" 
+                            required>
+                        <option value="">-- Selecione uma Turma --</option>
+                        {% for turma in turmas %}
+                            <option value="{{ turma }}">{{ turma }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Restrições Alimentares</label>
+                    {% for grupo, alimentos in grupos_alimentos.items() %}
+                        <div class="mb-2">
+                            <p class="font-medium text-gray-700">{{ grupo }}</p>
+                            {% for alimento in alimentos %}
+                                <label class="inline-flex items-center mr-4">
+                                    <input type="checkbox" name="restricoes" value="{{ alimento }}" 
+                                           class="form-checkbox h-5 w-5 text-teal-600">
+                                    <span class="ml-2 text-gray-800">{{ alimento }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" 
+                        class="w-full bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                    Cadastrar Aluno
+                </button>
+            </form>
+        </div>
 
-        <h2>ALUNOS CADASTRADOS</h2>
-        {% if alunos %}
-        <ul>
-            {% for nome, restricoes in alunos.items() %}
-            <li><strong>{{ nome }}:</strong> {{ restricoes|join(', ') or 'NENHUMA' }}</li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>NENHUM ALUNO CADASTRADO.</p>
-        {% endif %}
+        <!-- Lista de Alunos Cadastrados -->
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Alunos Cadastrados</h2>
+            {% if alunos %}
+                <ul>
+                    {% for nome, info in alunos.items() %}
+                        <li class="mb-2 text-gray-800">
+                            <strong>{{ nome }} (Turma: {{ info.turma }}) :</strong>
+                            {{ info.restricoes|join(', ') or 'NENHUMA' }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-gray-600">Nenhum aluno cadastrado.</p>
+            {% endif %}
+        </div>
 
-        <p><a class="comando" href="{{ url_for('main.alimentacao') }}">IR PARA ALIMENTACAO</a></p>
+        <!-- Links de Navegação -->
+        <div class="mt-6 flex space-x-4">
+            <a href="{{ url_for('main.calendario') }}" 
+            class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Adicionar Evento
+            </a>
+            <a href="{{ url_for('main.gerenciar_grupos') }}" 
+            class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Gerenciar Grupos de Alimentos
+            </a>
+            <a href="{{ url_for('main.dashboard') }}" 
+            class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Dashboard
+            </a>
+            <a href="{{ url_for('main.deletar_aluno') }}" 
+               class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300">
+                Deletar Aluno
+            </a>
+            <a href="{{ url_for('main.logout') }}" 
+            class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300">
+                Sair
+            </a>
+        </div>
+
     </div>
-
-    <script>
-        const gruposTitulo = document.querySelectorAll('.grupo-titulo');
-
-        gruposTitulo.forEach(titulo => {
-            titulo.addEventListener('click', function() {
-                const grupo = this.dataset.grupo;
-                const listaAlimentos = document.querySelector(`.alimentos-lista[data-grupo="${grupo}"]`);
-
-                this.classList.toggle('ativo');
-                listaAlimentos.classList.toggle('ativo');
-            });
-        });
-
-        const checkboxes = document.querySelectorAll('input[name="restricoes"]');
-
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const grupo = this.dataset.grupo;
-                const alimentoId = 'grupo-' + this.value.replace(' ', '-');
-                const grupoSpan = document.getElementById(alimentoId);
-
-                if (this.checked && grupo) {
-                    grupoSpan.textContent = '(do grupo ' + grupo + ')';
-                    grupoSpan.style.display = 'inline';
-                } else {
-                    grupoSpan.style.display = 'none';
-                }
-            });
-        });
-    </script>
 </body>
 </html>

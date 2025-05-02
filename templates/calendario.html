@@ -1,37 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
     <title>Calendário de Alimentação</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #123C3C; /* Azul escuro esverdeado */
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Calendário de Alimentação</h1>
-        <hr>
-        <p><a class="comando" href="{{ url_for('main.adicionar_evento') }}">Adicionar Evento</a></p>
-        <hr>
+<body class="bg-[#123C3C] text-white min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-white mb-6">Calendário de Alimentação</h1>
+        
+        <div class="mb-6">
+            <a href="{{ url_for('main.adicionar_evento') }}" 
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Adicionar Evento
+            </a>
+        </div>
 
         {% if calendario %}
             {% for data, eventos in calendario.items() %}
-                <h2>{{ data.strftime('%d/%m/%Y') }}</h2>
-                <ul>
-                    {% for evento in eventos %}
-                        <li>
-                            <strong>{{ evento.aluno }}</strong> - {{ evento.refeicao }}:
-                            {{ evento.alimentos|join(', ') }}
-                            {% if evento.observacoes %}
-                                (Observações: {{ evento.observacoes }})
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-                <hr>
+                <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">{{ data.strftime('%d/%m/%Y') }}</h2>
+                    <ul>
+                        {% for evento in eventos %}
+                            <li class="mb-2 text-gray-800">
+                                <strong>{{ evento.aluno }}</strong> - {{ evento.refeicao }}:
+                                {{ evento.alimentos|join(', ') }}
+                                {% if evento.observacoes %}
+                                    (Observações: {{ evento.observacoes }})
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             {% endfor %}
         {% else %}
-            <p>Nenhum evento de alimentação cadastrado ainda.</p>
+            <p class="text-gray-600">Nenhum evento de alimentação cadastrado ainda.</p>
         {% endif %}
 
-        <p><a class="comando" href="{{ url_for('main.admin') }}">Voltar para Admin</a></p>
+        <div class="mt-6">
+            <a href="{{ url_for('main.admin') }}" 
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Voltar para Admin
+            </a>
+        </div>
     </div>
 </body>
 </html>

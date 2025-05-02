@@ -1,102 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>LOGIN</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='msdos.css') }}">
+    <title>Login - Sistema de Alimentação Escolar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 80%;
-            max-width: 400px;
-            padding: 30px;
-            border: 2px solid #00FF00;
-            background-color: #111111;
-            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
-            text-align: center;
-        }
-
-        h1 {
-            color: #00FF00;
-            margin-bottom: 5px; /* Reduzindo a margem entre os títulos */
-            font-size: 1.8em; /* Aumentando um pouco a fonte do primeiro título */
-            line-height: 1; /* Reduzindo a altura da linha */
-        }
-
-        h2 {
-            color: #00FF00;
-            margin-top: 5px; /* Adicionando margem acima do segundo título */
-            margin-bottom: 20px; /* Adicionando margem abaixo do segundo título */
-            font-size: 1.2em; /* Reduzindo um pouco a fonte do segundo título */
-            line-height: 1;
-        }
-
-        hr {
-            border-top: 1px solid #00FF00;
-            margin: 20px 0;
-        }
-
-        p {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            width: calc(100% - 12px);
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #00FF00;
-            background-color: #000000;
-            color: #00FF00;
-            font-family: 'Fixedsys Excelsior 3.01', monospace;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #222222;
-            color: #00FF00;
-            border: 1px solid #00FF00;
-            font-family: 'Fixedsys Excelsior 3.01', monospace;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #333333;
-        }
-
-        .error {
-            color: #FFFF00;
-            margin-top: 10px;
-            text-align: center;
+            background-color: #123C3C; /* Azul escuro esverdeado */
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>ESCOLA SOCIAL</h1>
-        <h2>COLÉGIO MARISTA SANTOS</h2>
-        <hr>
-        <h3>LOGIN</h3>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-300">
+        <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">Projeto Alimentação Lar Feliz 2025</h1>
+        <h2 class="text-lg text-center text-gray-700 mb-6">Sistema de Gestão de Alimentação Escolar</h2>
         <form method="POST">
             {% if error %}
-            <p class="error">{{ error }}</p>
+            <p class="text-red-500 text-center mb-4 font-semibold">{{ error }}</p>
             {% endif %}
-            <p>USUÁRIO: <input type="text" name="username" required></p>
-            <p>SENHA: <input type="password" name="password" required></p>
-            <button type="submit">ENTRAR</button>
+            <div class="mb-4">
+                <label for="username" class="block text-gray-800 mb-2">Usuário</label>
+                <input type="text" id="username" name="username" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                       required>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-800 mb-2">Senha</label>
+                <input type="password" id="password" name="password" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                       required>
+            </div>
+            <button type="submit" 
+                    class="w-full bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Entrar
+            </button>
         </form>
-        <hr>
     </div>
 </body>
 </html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Deletar Aluno</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #123C3C; /* Azul escuro esverdeado */
+        }
+    </style>
+</head>
+<body class="bg-[#123C3C] text-white min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-white mb-6">Deletar Aluno</h1>
+
+        <div class="bg-white p-6 rounded-lg shadow-xl mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Selecionar Aluno e Mês de Exclusão</h2>
+            <form method="POST" action="{{ url_for('main.deletar_aluno') }}">
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Aluno:</label>
+                    <select name="aluno" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800" required>
+                        <option value="" disabled selected>Selecione um aluno</option>
+                        {% for nome in alunos.keys() %}
+                            {% if alunos[nome].get('data_exclusao') is none %}
+                                <option value="{{ nome }}">{{ nome }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex space-x-4 mb-4">
+                    <div class="w-full">
+                        <label class="block text-gray-800 mb-2">Mês de Exclusão:</label>
+                        <select name="mes_exclusao" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800" required>
+                            <option value="" disabled selected>Selecione o Mês</option>
+                            {% set meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                                        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"] %}
+                            {% for i in range(12) %}
+                                <option value="{{ i+1 }}">{{ meses[i] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="w-full">
+                        <label class="block text-gray-800 mb-2">Ano de Exclusão:</label>
+                        <select name="ano_exclusao" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800" required>
+                            <option value="" disabled selected>Selecione o Ano</option>
+                            {% for ano in range(2020, 2030) %}
+                                <option value="{{ ano }}">{{ ano }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300">
+                    Deletar Aluno
+                </button>
+            </form>
+        </div>
+
+        <!-- Links de Navegação -->
+        <div class="mt-6 flex space-x-4">
+            <a href="{{ url_for('main.admin') }}" 
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                Voltar para Administração
+            </a>
+            <a href="{{ url_for('main.logout') }}" 
+               class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300">
+                Sair
+            </a>
+        </div>
+    </div>
+</body>
+</html>
