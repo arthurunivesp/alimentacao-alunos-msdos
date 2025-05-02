@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "__init__.py",
+        "use": "@vercel/python",
+        "config": { "pythonVersion": "3.12" } // Tente 3.12 ou 3.11
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "__init__.py"
+      }
+    ]
+  }
