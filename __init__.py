@@ -12,13 +12,11 @@ def timestamp_filter(value):
 
 app.jinja_env.filters['timestamp'] = timestamp_filter
 
-# Importação dentro da verificação para evitar erros de referência circular
-if __name__ != "__main__":
-    from .routes import main_bp
-    app.register_blueprint(main_bp)
+# Importação direta do blueprint (sem condição)
+from routes import main_bp
+app.register_blueprint(main_bp)
 
-# Garante que a aplicação funcione tanto com flask run quanto executando diretamente
 if __name__ == '__main__':
-    from routes import main_bp  # Importação direta para execução local
-    app.register_blueprint(main_bp)
     app.run(debug=True)
+
+app = app  # Exporta a aplicação para Vercel
