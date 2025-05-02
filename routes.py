@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, abort
+from flask import Blueprint, render_template, request, redirect, url_for, session, abort, flash
 from datetime import datetime, timedelta
 from functools import wraps
 from calendar import monthrange
@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns  # Biblioteca para gráficos mais bonitos
 
 # ================== CONFIGURAÇÃO INICIAL ==================
-# Define caminhos críticos antes de qualquer outra coisa
+# Define caminhos críticos usando caminho relativo
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(r"C:\Users\gigie\Documents\001 PI 01 2025\sua_aplicacao_demo_msdos", "static")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 # Garante que a pasta static existe
 if not os.path.exists(STATIC_DIR):
