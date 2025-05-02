@@ -1,0 +1,15 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# Flask
+instance/
+static/mais_consumidos.png
+static/menos_consumidos.png
+
+# IDE
+.vscode/
+.idea/
