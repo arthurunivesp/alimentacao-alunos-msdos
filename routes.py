@@ -145,13 +145,30 @@ def logout():
 def calendario():
     init_session()
 
-    # Converter as chaves da sessão de string para datetime antes de enviar ao template
-    calendario_data = {
-        datetime.strptime(data_str, "%Y-%m-%d").date(): eventos
-        for data_str, eventos in session.get("calendario_alimentacao", {}).items()
-    }
+    # Organizar os eventos por ano e mês
+    calendario_organizado = {}
+    for data_str, eventos in session.get("calendario_alimentacao", {}).items():
+        data = datetime.strptime(data_str, "%Y-%m-%d").date()
+        year = data.year
+        month = data.month
 
-    return render_template('calendario.html', calendario=calendario_data)
+        if year not in calendario_organizado:
+            calendario_organizado[year] = {}
+        if month not in calendario_organizado[year]:
+            calendario_organizado[year][month] = []
+
+        # Adicionar eventos com a data formatada
+        for evento in eventos:
+            evento_dict = {
+                'data': data,
+                'aluno': evento['aluno'],
+                'refeicao': evento['refeicao'],
+                'alimentos': evento['alimentos'],
+                'observacoes': evento['observacoes']
+            }
+            calendario_organizado[year][month].append(evento_dict)
+
+    return render_template('calendario.html', calendario=calendario_organizado)
 
 @main_bp.route('/adicionar_evento', methods=['GET', 'POST'])
 def adicionar_evento():
@@ -594,4 +611,3 @@ def deletar_aluno():
     
     return render_template('deletar_aluno.html', alunos=session['alunos'])
 
-    
