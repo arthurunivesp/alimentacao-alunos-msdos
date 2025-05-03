@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, abort, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, abort, flash, send_file
 from datetime import datetime, timedelta
 from functools import wraps
 from calendar import monthrange
@@ -13,9 +13,10 @@ import seaborn as sns  # Biblioteca para gráficos mais bonitos
 # Define caminhos críticos usando caminho relativo
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMP_DIR = "/tmp" if os.getenv("VERCEL") else STATIC_DIR  # Usa /tmp no Vercel, static localmente
 
-# Garante que a pasta static existe
-if not os.path.exists(STATIC_DIR):
+# Garante que a pasta static existe localmente
+if not os.getenv("VERCEL") and not os.path.exists(STATIC_DIR):
     os.makedirs(STATIC_DIR)
 
 main_bp = Blueprint('main', __name__)
@@ -367,7 +368,8 @@ def dashboard():
                         fontsize=12
                     )
                 
-                plt.savefig(os.path.join(STATIC_DIR, "grupos_mais_consumidos.png"), bbox_inches='tight', dpi=150)
+                grupos_chart_path = os.path.join(TEMP_DIR, "grupos_mais_consumidos.png")
+                plt.savefig(grupos_chart_path, bbox_inches='tight', dpi=150)
                 plt.close()
                 graf_grupos = True
 
@@ -398,7 +400,8 @@ def dashboard():
                         fontsize=12
                     )
                 
-                plt.savefig(os.path.join(STATIC_DIR, "alimentos_mais_consumidos.png"), bbox_inches='tight', dpi=150)
+                alimentos_chart_path = os.path.join(TEMP_DIR, "alimentos_mais_consumidos.png")
+                plt.savefig(alimentos_chart_path, bbox_inches='tight', dpi=150)
                 plt.close()
                 graf_alimentos = True
 
@@ -440,6 +443,14 @@ def dashboard():
         total_geral=total_geral,
         user_role=user_role  # Passa a role do usuário para o template
     )
+
+@main_bp.route('/temp/<filename>')
+def serve_temp_file(filename):
+    file_path = os.path.join(TEMP_DIR, filename)
+    if os.path.exists(file_path):
+        return send_file(file_path, mimetype='image/png')
+    else:
+        abort(404)
 
 @main_bp.route('/consulta_diaria', methods=['GET'])
 @login_required
@@ -493,7 +504,7 @@ def consulta_diaria():
         plt.xlabel("Quantidade", fontsize=12)
         plt.ylabel("Alimentos", fontsize=12)
         plt.tight_layout()
-        plt.savefig(os.path.join(STATIC_DIR, "mais_consumidos.png"))
+        plt.savefig(os.path.join(TEMP_DIR, "mais_consumidos.png"))
         plt.close()
 
         plt.figure(figsize=(8, 6))
@@ -502,11 +513,11 @@ def consulta_diaria():
         plt.xlabel("Quantidade", fontsize=12)
         plt.ylabel("Alimentos", fontsize=12)
         plt.tight_layout()
-        plt.savefig(os.path.join(STATIC_DIR, "menos_consumidos.png"))
+        plt.savefig(os.path.join(TEMP_DIR, "menos_consumidos.png"))
         plt.close()
 
-    mais_consumidos_exists = os.path.exists(os.path.join(STATIC_DIR, "mais_consumidos.png"))
-    menos_consumidos_exists = os.path.exists(os.path.join(STATIC_DIR, "menos_consumidos.png"))
+    mais_consumidos_exists = os.path.exists(os.path.join(TEMP_DIR, "mais_consumidos.png"))
+    menos_consumidos_exists = os.path.exists(os.path.join(TEMP_DIR, "menos_consumidos.png"))
 
     # Filtra alunos para exibir apenas os que não estão excluídos no momento atual
     alunos_ativos = {

@@ -175,7 +175,7 @@
                         <h3 class="text-gray-800 font-bold mb-2">Top 5 Grupos Mais Consumidos</h3>
                         {% if grupos_mais_consumidos_exists %}
                             <img 
-                                src="{{ url_for('static', filename='grupos_mais_consumidos.png') }}?v={{ range(1, 1000)|random }}" 
+                                src="{{ url_for('main.serve_temp_file', filename='grupos_mais_consumidos.png') }}?v={{ range(1, 1000)|random }}" 
                                 class="max-w-lg border border-gray-200"
                             >
                         {% else %}
@@ -188,7 +188,7 @@
                         <h3 class="text-gray-800 font-bold mb-2">Top 5 Alimentos Mais Consumidos</h3>
                         {% if alimentos_mais_consumidos_exists %}
                             <img 
-                                src="{{ url_for('static', filename='alimentos_mais_consumidos.png') }}?v={{ range(1, 1000)|random }}" 
+                                src="{{ url_for('main.serve_temp_file', filename='alimentos_mais_consumidos.png') }}?v={{ range(1, 1000)|random }}" 
                                 class="max-w-lg border border-gray-200"
                             >
                         {% else %}
@@ -260,3 +260,4 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 </html>
+
