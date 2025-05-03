@@ -39,8 +39,7 @@ def init_session():
             "PROTEÍNA": ["Carne bovina", "Suína", "Aves", "Peixes", "Ovos"],
             "CEREAIS": ["Arroz", "Pão", "Bolacha"],
             "GRÃOS": ["Feijão"],
-            "FRUTAS": ["Banana", "Maçã", "Mamão", "Melancia"],
-            "SUCO DE FRUTAS": ["Sucos diversos"],
+            "FRUTAS": ["Banana", "Maçã", "Mamão", "Melancia", "Suco de Frutas"],  # Corrigido: Suco de Frutas como alimento dentro de FRUTAS
         }
 
 # Decorador para exigir login
@@ -301,6 +300,18 @@ def dashboard():
             {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Café da Manhã', 'alimentos': ['Bolacha', 'Vitamina'], 'observacoes': ''},
             {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Almoço', 'alimentos': ['Banana', 'Maçã'], 'observacoes': ''},
         ]
+        session['calendario_alimentacao']['2025-04-03'] = [
+            {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Café da Manhã', 'alimentos': ['Pão', 'Achocolatado'], 'observacoes': ''},
+            {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Almoço', 'alimentos': ['Suco de Frutas', 'Feijão'], 'observacoes': ''},
+        ]
+        session['calendario_alimentacao']['2025-04-04'] = [
+            {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Café da Manhã', 'alimentos': ['Arroz', 'Tomate'], 'observacoes': ''},
+            {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Almoço', 'alimentos': ['Melancia', 'Carne bovina'], 'observacoes': ''},
+        ]
+        session['calendario_alimentacao']['2025-04-05'] = [
+            {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Café da Manhã', 'alimentos': ['Bolacha', 'Alface'], 'observacoes': ''},
+            {'aluno': aluno_selecionado or 'Aluno Teste', 'refeicao': 'Almoço', 'alimentos': ['Suco de Frutas', 'Mamão'], 'observacoes': ''},
+        ]
         session.modified = True
 
     # Processamento principal
@@ -339,75 +350,87 @@ def dashboard():
                         for a in alimentos if a in relatorio_mensal
                     }
 
-            # Geração de gráficos
+            # Geração de gráficos - Separando em blocos try-except independentes
+            # Gráfico 1: Grupos de Alimentos Mais Consumidos
             try:
-                # Gráfico 1: Grupos de Alimentos Mais Consumidos
                 grupos_ordenados = sorted(consumo_por_grupo.items(), key=lambda x: x[1], reverse=True)[:5]
-                plt.figure(figsize=(10, 6))
-                sns.set_theme(style="whitegrid")
-                ax = sns.barplot(
-                    x=[v for k, v in grupos_ordenados], 
-                    y=[k for k, v in grupos_ordenados],
-                    palette="Blues_d"
-                )
-                plt.title("Top 5 Grupos de Alimentos Mais Consumidos", fontsize=16, pad=20)
-                plt.xlabel("Quantidade Consumida", fontsize=14)
-                plt.ylabel("Grupo de Alimento", fontsize=14)
-                plt.xticks(fontsize=12)
-                plt.yticks(fontsize=12)
-                
-                # Adiciona porcentagens
-                for p in ax.patches:
-                    width = p.get_width()
-                    ax.text(
-                        width + 0.1, 
-                        p.get_y() + p.get_height()/2., 
-                        f'{width} ({(width / total_geral):.1%})',  
-                        ha='left', 
-                        va='center', 
-                        fontsize=12
+                if grupos_ordenados:  # Verifica se há dados para o gráfico
+                    plt.figure(figsize=(10, 6))
+                    sns.set_theme(style="whitegrid")
+                    ax = sns.barplot(
+                        x=[v for k, v in grupos_ordenados], 
+                        y=[k for k, v in grupos_ordenados],
+                        palette="Blues_d"
                     )
-                
-                grupos_chart_path = os.path.join(TEMP_DIR, "grupos_mais_consumidos.png")
-                plt.savefig(grupos_chart_path, bbox_inches='tight', dpi=150)
-                plt.close()
-                graf_grupos = True
-
-                # Gráfico 2: Alimentos Mais Consumidos
-                alimentos_ordenados = sorted(relatorio_mensal.items(), key=lambda x: x[1], reverse=True)[:5]
-                plt.figure(figsize=(10, 6))
-                sns.set_theme(style="whitegrid")
-                ax = sns.barplot(
-                    x=[v for k, v in alimentos_ordenados], 
-                    y=[k for k, v in alimentos_ordenados],
-                    palette="Greens_d"
-                )
-                plt.title("Top 5 Alimentos Mais Consumidos", fontsize=16, pad=20)
-                plt.xlabel("Quantidade Consumida", fontsize=14)
-                plt.ylabel("Alimento", fontsize=14)
-                plt.xticks(fontsize=12)
-                plt.yticks(fontsize=12)
-                
-                # Adiciona porcentagens
-                for p in ax.patches:
-                    width = p.get_width()
-                    ax.text(
-                        width + 0.1, 
-                        p.get_y() + p.get_height()/2., 
-                        f'{width} ({(width / total_geral):.1%})',  
-                        ha='left', 
-                        va='center', 
-                        fontsize=12
-                    )
-                
-                alimentos_chart_path = os.path.join(TEMP_DIR, "alimentos_mais_consumidos.png")
-                plt.savefig(alimentos_chart_path, bbox_inches='tight', dpi=150)
-                plt.close()
-                graf_alimentos = True
-
+                    plt.title("Top 5 Grupos de Alimentos Mais Consumidos", fontsize=16, pad=20)
+                    plt.xlabel("Quantidade Consumida", fontsize=14)
+                    plt.ylabel("Grupo de Alimento", fontsize=14)
+                    plt.xticks(fontsize=12)
+                    plt.yticks(fontsize=12)
+                    
+                    # Adiciona porcentagens
+                    for p in ax.patches:
+                        width = p.get_width()
+                        ax.text(
+                            width + 0.1, 
+                            p.get_y() + p.get_height()/2., 
+                            f'{width} ({(width / total_geral):.1%})',  
+                            ha='left', 
+                            va='center', 
+                            fontsize=12
+                        )
+                    
+                    grupos_chart_path = os.path.join(TEMP_DIR, "grupos_mais_consumidos.png")
+                    plt.savefig(grupos_chart_path, bbox_inches='tight', dpi=150)
+                    plt.close()
+                    graf_grupos = True
+                    print(f"Gráfico de grupos gerado com sucesso: {grupos_chart_path}")
+                else:
+                    print("Nenhum dado disponível para o gráfico de grupos.")
             except Exception as e:
-                print(f"Erro nos gráficos: {str(e)}")
-                graf_grupos = graf_alimentos = False
+                print(f"Erro ao gerar o gráfico de grupos: {str(e)}")
+                graf_grupos = False
+
+            # Gráfico 2: Alimentos Mais Consumidos
+            try:
+                alimentos_ordenados = sorted(relatorio_mensal.items(), key=lambda x: x[1], reverse=True)[:5]
+                print(f"Alimentos ordenados para o gráfico: {alimentos_ordenados}")
+                if alimentos_ordenados:  # Verifica se há dados para o gráfico
+                    plt.figure(figsize=(10, 6))
+                    sns.set_theme(style="whitegrid")
+                    ax = sns.barplot(
+                        x=[v for k, v in alimentos_ordenados], 
+                        y=[k for k, v in alimentos_ordenados],
+                        palette="Greens_d"
+                    )
+                    plt.title("Top 5 Alimentos Mais Consumidos", fontsize=16, pad=20)
+                    plt.xlabel("Quantidade Consumida", fontsize=14)
+                    plt.ylabel("Alimento", fontsize=14)
+                    plt.xticks(fontsize=12)
+                    plt.yticks(fontsize=12)
+                    
+                    # Adiciona porcentagens
+                    for p in ax.patches:
+                        width = p.get_width()
+                        ax.text(
+                            width + 0.1, 
+                            p.get_y() + p.get_height()/2., 
+                            f'{width} ({(width / total_geral):.1%})',  
+                            ha='left', 
+                            va='center', 
+                            fontsize=12
+                        )
+                    
+                    alimentos_chart_path = os.path.join(TEMP_DIR, "alimentos_mais_consumidos.png")
+                    plt.savefig(alimentos_chart_path, bbox_inches='tight', dpi=150)
+                    plt.close()
+                    graf_alimentos = True
+                    print(f"Gráfico de alimentos gerado com sucesso: {alimentos_chart_path}")
+                else:
+                    print("Nenhum dado disponível para o gráfico de alimentos.")
+            except Exception as e:
+                print(f"Erro ao gerar o gráfico de alimentos: {str(e)}")
+                graf_alimentos = False
 
     except Exception as e:
         print(f"Erro crítico no processamento: {str(e)}")
@@ -570,3 +593,5 @@ def deletar_aluno():
                 return "Erro ao processar a exclusão do aluno."
     
     return render_template('deletar_aluno.html', alunos=session['alunos'])
+
+    
