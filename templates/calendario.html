@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importando Alpine.js para efeito sanfona -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>
         body {
             background-color: #123C3C; /* Azul escuro esverdeado */
@@ -23,24 +25,43 @@
         </div>
 
         {% if calendario %}
-            {% for data, eventos in calendario.items() %}
-                <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">{{ data.strftime('%d/%m/%Y') }}</h2>
-                    <ul>
-                        {% for evento in eventos %}
-                            <li class="mb-2 text-gray-800">
-                                <strong>{{ evento.aluno }}</strong> - {{ evento.refeicao }}:
-                                {{ evento.alimentos|join(', ') }}
-                                {% if evento.observacoes %}
-                                    (Observações: {{ evento.observacoes }})
-                                {% endif %}
-                            </li>
+            <!-- Accordion para cada ano -->
+            {% for year, months in calendario.items() %}
+                <div x-data="{ open: false }" class="mb-4">
+                    <button @click="open = !open" class="w-full bg-[#2E8B8B] text-white p-3 rounded-lg text-left hover:bg-[#246B6B] transition duration-300">
+                        <span class="text-lg font-semibold">{{ year }}</span>
+                        <span class="float-right" x-text="open ? '▲' : '▼'"></span>
+                    </button>
+                    <div x-show="open" x-transition class="mt-2">
+                        <!-- Accordion para cada mês dentro do ano -->
+                        {% for month in months.keys() %}
+                            <div x-data="{ monthOpen: false }" class="ml-4 mb-2">
+                                <button @click="monthOpen = !monthOpen" class="w-full bg-[#3EA38D] text-white p-2 rounded-lg text-left hover:bg-[#2E8B6B] transition duration-300">
+                                    <span class="text-base font-medium">{{ "{:02d}".format(month) }} - {{ ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][month-1] }}</span>
+                                    <span class="float-right" x-text="monthOpen ? '▲' : '▼'"></span>
+                                </button>
+                                <div x-show="monthOpen" x-transition class="mt-2">
+                                    <!-- Eventos do mês -->
+                                    {% for event in months[month] %}
+                                        <div class="bg-white p-4 rounded-lg shadow-lg mb-2 text-gray-800">
+                                            <h3 class="text-sm font-semibold mb-1">{{ event.data.strftime('%d/%m/%Y') }}</h3>
+                                            <p>
+                                                <strong>{{ event.aluno }}</strong> - {{ event.refeicao }}:
+                                                {{ event.alimentos|join(', ') }}
+                                                {% if event.observacoes %}
+                                                    (Observações: {{ event.observacoes }})
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         {% endfor %}
-                    </ul>
+                    </div>
                 </div>
             {% endfor %}
         {% else %}
-            <p class="text-gray-600">Nenhum evento de alimentação cadastrado ainda.</p>
+            <p class="text-gray-300">Nenhum evento de alimentação cadastrado ainda.</p>
         {% endif %}
 
         <div class="mt-6">
