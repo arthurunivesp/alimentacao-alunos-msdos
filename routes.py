@@ -22,7 +22,7 @@ if not os.getenv("VERCEL") and not os.path.exists(STATIC_DIR):
 main_bp = Blueprint('main', __name__)
 
 # Lista de turmas predefinidas
-TURMAS = ["Turma A", "Turma B", "Turma C"]
+TURMAS_DEFAULT = ["Turma A", "Turma B", "Turma C"]
 
 # Inicializar variáveis na sessão se não existirem
 def init_session():
@@ -39,8 +39,11 @@ def init_session():
             "PROTEÍNA": ["Carne bovina", "Suína", "Aves", "Peixes", "Ovos"],
             "CEREAIS": ["Arroz", "Pão", "Bolacha"],
             "GRÃOS": ["Feijão"],
-            "FRUTAS": ["Banana", "Maçã", "Mamão", "Melancia", "Suco de Frutas"],  # Corrigido: Suco de Frutas como alimento dentro de FRUTAS
+            "FRUTAS": ["Banana", "Maçã", "Mamão", "Melancia", "Suco de Frutas"],
         }
+    # Inicializa a lista de turmas na sessão
+    if 'turmas' not in session:
+        session['turmas'] = TURMAS_DEFAULT
 
 # Decorador para exigir login
 def login_required(f):
@@ -48,6 +51,15 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'role' not in session:
             return redirect(url_for('main.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Decorador para exigir role de admin
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('role') != 'admin':
+            abort(403)  # Forbidden
         return f(*args, **kwargs)
     return decorated_function
 
@@ -59,11 +71,10 @@ USUARIOS = {
 
 @main_bp.route('/admin', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def admin():
     init_session()
     print(f"Usuário na página admin (role na sessão): {session.get('role')}")
-    if session.get('role') != 'admin':
-        abort(403)  # Erro 403: Forbidden
     if request.method == 'POST':
         aluno_nome = request.form.get('aluno_nome')
         turma = request.form.get('turma')
@@ -73,8 +84,24 @@ def admin():
             session['alunos'][aluno_nome] = {'turma': turma, 'restricoes': restricoes}
             session.modified = True
             return redirect(url_for('main.admin'))
-    print(f"Renderizando admin.html com alunos: {session['alunos']}, grupos_alimentos: {session['grupos_alimentos']}, turmas: {TURMAS}")
-    return render_template('admin.html', alunos=session['alunos'], grupos_alimentos=session['grupos_alimentos'], turmas=TURMAS)
+    print(f"Renderizando admin.html com alunos: {session['alunos']}, grupos_alimentos: {session['grupos_alimentos']}, turmas: {session['turmas']}")
+    return render_template('admin.html', alunos=session['alunos'], grupos_alimentos=session['grupos_alimentos'], turmas=session['turmas'])
+
+@main_bp.route('/add_turma', methods=['POST'])
+@login_required
+@admin_required
+def add_turma():
+    init_session()
+    nova_turma = request.form.get('nova_turma')
+    turmas = session.get('turmas', TURMAS_DEFAULT)
+    if nova_turma and nova_turma not in turmas:
+        turmas.append(nova_turma)
+        session['turmas'] = turmas
+        session.modified = True
+        print(f"Nova turma adicionada: {nova_turma}")
+    else:
+        print("Erro ao adicionar turma: Turma já existe ou nome inválido.")
+    return redirect(url_for('main.admin'))
 
 @main_bp.route('/alimentacao', methods=['GET'])
 @login_required
@@ -115,7 +142,7 @@ def alimentacao():
         if 'data_exclusao' not in dados or datetime.now() < datetime.strptime(dados['data_exclusao'], '%Y-%m-%d')
     }
 
-    return render_template('alimentacao.html', alunos=alunos_ativos, turmas=TURMAS, aluno_selecionado=aluno_selecionado, turma_selecionada=turma_selecionada, eventos_aluno=eventos_aluno, eventos_turma=eventos_turma)
+    return render_template('alimentacao.html', alunos=alunos_ativos, turmas=session['turmas'], aluno_selecionado=aluno_selecionado, turma_selecionada=turma_selecionada, eventos_aluno=eventos_aluno, eventos_turma=eventos_turma)
 
 @main_bp.route('/', methods=['GET', 'POST'])
 def login():
@@ -208,7 +235,7 @@ def adicionar_evento():
             })
 
             if novo_aluno and novo_aluno not in session['alunos']:
-                session['alunos'][novo_aluno] = {'turma': 'Turma A', 'restricoes': []}
+                session['alunos'][novo_aluno] = {'turma': session['turmas'][0], 'restricoes': []}
 
             session.modified = True
             return redirect(url_for('main.calendario'))
@@ -610,4 +637,3 @@ def deletar_aluno():
                 return "Erro ao processar a exclusão do aluno."
     
     return render_template('deletar_aluno.html', alunos=session['alunos'])
-

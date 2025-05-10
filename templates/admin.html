@@ -18,7 +18,7 @@
         <!-- Formulário para cadastro de alunos -->
         <div class="bg-white p-6 rounded-lg shadow-xl mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Cadastrar Novo Aluno</h2>
-            <form method="POST">
+            <form method="POST" action="{{ url_for('main.admin') }}">
                 <div class="mb-4">
                     <label class="block text-gray-800 mb-2">Nome do Aluno</label>
                     <input type="text" name="aluno_nome" 
@@ -35,6 +35,11 @@
                             <option value="{{ turma }}">{{ turma }}</option>
                         {% endfor %}
                     </select>
+                    <!-- Botão para adicionar nova turma -->
+                    <button type="button" onclick="toggleNewTurmaForm()" 
+                            class="mt-2 text-teal-600 hover:text-teal-800 font-semibold">
+                        Adicionar Nova Turma
+                    </button>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-800 mb-2">Restrições Alimentares</label>
@@ -56,6 +61,24 @@
                     Cadastrar Aluno
                 </button>
             </form>
+            <!-- Formulário para adicionar nova turma (isolado do formulário principal) -->
+            <div id="new_turma_form" class="mt-4 hidden">
+                <form method="POST" action="{{ url_for('main.add_turma') }}" class="mt-2">
+                    <input type="text" name="nova_turma" 
+                           class="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                           placeholder="Digite o nome da nova turma" required>
+                    <div class="mt-2 flex space-x-2">
+                        <button type="submit" 
+                                class="bg-[#2E8B8B] text-white p-2 rounded-lg hover:bg-[#246B6B] transition duration-300">
+                            Salvar Turma
+                        </button>
+                        <button type="button" onclick="toggleNewTurmaForm()" 
+                                class="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 transition duration-300">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <!-- Lista de Alunos Cadastrados -->
@@ -78,15 +101,15 @@
         <!-- Links de Navegação -->
         <div class="mt-6 flex space-x-4">
             <a href="{{ url_for('main.calendario') }}" 
-            class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
                 Adicionar Evento
             </a>
             <a href="{{ url_for('main.gerenciar_grupos') }}" 
-            class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
                 Gerenciar Grupos de Alimentos
             </a>
             <a href="{{ url_for('main.dashboard') }}" 
-            class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
+               class="bg-[#2E8B8B] text-white p-3 rounded-lg hover:bg-[#246B6B] transition duration-300">
                 Dashboard
             </a>
             <a href="{{ url_for('main.deletar_aluno') }}" 
@@ -94,11 +117,17 @@
                 Deletar Aluno
             </a>
             <a href="{{ url_for('main.logout') }}" 
-            class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300">
+               class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition duration-300">
                 Sair
             </a>
         </div>
-
     </div>
+
+    <script>
+        function toggleNewTurmaForm() {
+            const form = document.getElementById('new_turma_form');
+            form.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>
