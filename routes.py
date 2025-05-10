@@ -103,6 +103,32 @@ def add_turma():
         print("Erro ao adicionar turma: Turma já existe ou nome inválido.")
     return redirect(url_for('main.admin'))
 
+@main_bp.route('/delete_turma', methods=['POST'])
+@login_required
+@admin_required
+def delete_turma():
+    init_session()
+    turma_to_delete = request.form.get('turma_to_delete')
+    turmas = session.get('turmas', TURMAS_DEFAULT)
+
+    if not turma_to_delete or turma_to_delete not in turmas:
+        print("Erro ao deletar turma: Turma não encontrada.")
+        return redirect(url_for('main.admin'))
+
+    # Verifica se algum aluno está usando a turma
+    for aluno, info in session['alunos'].items():
+        if info['turma'] == turma_to_delete:
+            print(f"Erro ao deletar turma: Turma {turma_to_delete} está sendo usada pelo aluno {aluno}.")
+            # Aqui você pode adicionar uma mensagem de erro visível para o usuário, se desejar
+            return redirect(url_for('main.admin'))
+
+    # Remove a turma da lista
+    turmas.remove(turma_to_delete)
+    session['turmas'] = turmas
+    session.modified = True
+    print(f"Turma deletada: {turma_to_delete}")
+    return redirect(url_for('main.admin'))
+
 @main_bp.route('/alimentacao', methods=['GET'])
 @login_required
 def alimentacao():
@@ -637,3 +663,4 @@ def deletar_aluno():
                 return "Erro ao processar a exclusão do aluno."
     
     return render_template('deletar_aluno.html', alunos=session['alunos'])
+
