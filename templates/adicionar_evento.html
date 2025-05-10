@@ -9,13 +9,18 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Adicionar Evento de Alimentação</h1>
-        <form method="POST">
+        {% if error %}
+            <div class="bg-red-100 text-red-800 p-3 rounded-lg mb-4">
+                {{ error }}
+            </div>
+        {% endif %}
+        <form method="POST" onsubmit="return validateForm()">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-700 mb-4">Selecionar Aluno</h2>
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Aluno Existente</label>
-                        <select name="aluno_existente" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select name="aluno_existente" id="aluno_existente" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updateObservacoesRequirement()">
                             <option value="">-- Selecione um Aluno --</option>
                             {% for nome in alunos %}
                                 <option value="{{ nome }}">{{ nome }}</option>
@@ -24,7 +29,7 @@
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Ou Cadastrar Novo Aluno</label>
-                        <input type="text" name="novo_aluno" placeholder="Nome do Novo Aluno" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="novo_aluno" id="novo_aluno" placeholder="Nome do Novo Aluno" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="updateObservacoesRequirement()">
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Data</label>
@@ -39,8 +44,8 @@
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">Observações (opcional)</label>
-                        <textarea name="observacoes" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                        <label id="observacoes_label" class="block text-gray-700 mb-2">Observações (opcional)</label>
+                        <textarea name="observacoes" id="observacoes" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
                     </div>
                 </div>
                 <div>
@@ -52,7 +57,7 @@
                             <ul class="mt-2">
                                 {% for alimento in alimentos %}
                                 <li class="flex items-center mb-2">
-                                    <input type="checkbox" name="alimentos" value="{{ alimento }}" class="mr-2">
+                                    <input type="checkbox" name="alimentos" value="{{ alimento }}" class="mr-2" onchange="updateObservacoesRequirement()">
                                     <span>{{ alimento }}</span>
                                 </li>
                                 {% endfor %}
@@ -68,5 +73,62 @@
             </div>
         </form>
     </div>
+
+    <script>
+        // Injeta as restrições dos alunos como uma variável global temporária
+        window.alunosRestricoesRaw = '{{ alunos_restricoes | tojson | safe }}';
+
+        // Converte a string JSON em um objeto JavaScript
+        const alunosRestricoes = JSON.parse(window.alunosRestricoesRaw);
+
+        function updateObservacoesRequirement() {
+            const alunoExistente = document.getElementById('aluno_existente').value;
+            const novoAluno = document.getElementById('novo_aluno').value;
+            const observacoesField = document.getElementById('observacoes');
+            const observacoesLabel = document.getElementById('observacoes_label');
+
+            // Determina o aluno selecionado
+            const alunoSelecionado = alunoExistente || novoAluno;
+
+            // Se for um novo aluno, não há restrições, então o campo é opcional
+            if (novoAluno) {
+                observacoesField.removeAttribute('required');
+                observacoesLabel.textContent = 'Observações (opcional)';
+                observacoesLabel.classList.remove('text-red-600');
+                return;
+            }
+
+            // Obtém as restrições do aluno selecionado
+            const restricoes = alunoSelecionado && alunosRestricoes[alunoSelecionado] ? alunosRestricoes[alunoSelecionado] : [];
+
+            // Obtém os alimentos selecionados
+            const alimentosCheckboxes = document.querySelectorAll('input[name="alimentos"]:checked');
+            const alimentosSelecionados = Array.from(alimentosCheckboxes).map(cb => cb.value);
+
+            // Verifica se algum alimento selecionado está na lista de restrições
+            const temRestricao = alimentosSelecionados.some(alimento => restricoes.includes(alimento));
+
+            // Atualiza o campo "Observações" com base na presença de alimentos restritos
+            if (temRestricao) {
+                observacoesField.setAttribute('required', 'required');
+                observacoesLabel.textContent = 'Observações (obrigatório - alimento restrito consumido)';
+                observacoesLabel.classList.add('text-red-600');
+            } else {
+                observacoesField.removeAttribute('required');
+                observacoesLabel.textContent = 'Observações (opcional)';
+                observacoesLabel.classList.remove('text-red-600');
+            }
+        }
+
+        function validateForm() {
+            updateObservacoesRequirement();
+            const observacoesField = document.getElementById('observacoes');
+            if (observacoesField.hasAttribute('required') && !observacoesField.value.trim()) {
+                alert('O campo "Observações" é obrigatório porque o aluno consumiu um alimento restrito.');
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>

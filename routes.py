@@ -119,7 +119,6 @@ def delete_turma():
     for aluno, info in session['alunos'].items():
         if info['turma'] == turma_to_delete:
             print(f"Erro ao deletar turma: Turma {turma_to_delete} está sendo usada pelo aluno {aluno}.")
-            # Aqui você pode adicionar uma mensagem de erro visível para o usuário, se desejar
             return redirect(url_for('main.admin'))
 
     # Remove a turma da lista
@@ -232,7 +231,7 @@ def adicionar_evento():
         data_str = request.form.get('data')
         refeicao = request.form.get('refeicao')
         alimentos = request.form.getlist('alimentos')
-        observacoes = request.form.get('observacoes')
+        observacoes = request.form.get('observacoes', '').strip()
 
         aluno_nome = aluno_existente if aluno_existente else novo_aluno
 
@@ -240,13 +239,29 @@ def adicionar_evento():
             try:
                 data = datetime.strptime(data_str, '%Y-%m-%d').date()
             except ValueError:
-                return "Formato de data inválido."
+                return render_template('adicionar_evento.html', 
+                                       alunos=session['alunos'], 
+                                       grupos_alimentos=session['grupos_alimentos'], 
+                                       error="Formato de data inválido.")
 
             # Verifica se o aluno está excluído a partir de uma data
             if aluno_nome in session['alunos'] and 'data_exclusao' in session['alunos'][aluno_nome]:
                 data_exclusao = datetime.strptime(session['alunos'][aluno_nome]['data_exclusao'], '%Y-%m-%d').date()
                 if data >= data_exclusao:
-                    return f"O aluno {aluno_nome} foi excluído a partir de {data_exclusao.strftime('%Y-%m-%d')}. Não é possível adicionar eventos após essa data."
+                    return render_template('adicionar_evento.html', 
+                                           alunos=session['alunos'], 
+                                           grupos_alimentos=session['grupos_alimentos'], 
+                                           error=f"O aluno {aluno_nome} foi excluído a partir de {data_exclusao.strftime('%Y-%m-%d')}. Não é possível adicionar eventos após essa data.")
+
+            # Verifica se o aluno consumiu algum alimento restrito
+            if aluno_existente in session['alunos']:
+                restricoes = session['alunos'][aluno_existente].get('restricoes', [])
+                alimentos_restritos_consumidos = [alimento for alimento in alimentos if alimento in restricoes]
+                if alimentos_restritos_consumidos and not observacoes:
+                    return render_template('adicionar_evento.html', 
+                                           alunos=session['alunos'], 
+                                           grupos_alimentos=session['grupos_alimentos'], 
+                                           error=f"O aluno {aluno_nome} consumiu alimentos restritos ({', '.join(alimentos_restritos_consumidos)}). O campo 'Observações' é obrigatório nesse caso.")
 
             data_str = data.strftime('%Y-%m-%d')  # Convertendo data para string
 
@@ -266,14 +281,20 @@ def adicionar_evento():
             session.modified = True
             return redirect(url_for('main.calendario'))
         else:
-            return "Por favor, selecione um aluno existente ou digite o nome de um novo aluno."
+            return render_template('adicionar_evento.html', 
+                                   alunos=session['alunos'], 
+                                   grupos_alimentos=session['grupos_alimentos'], 
+                                   error="Por favor, selecione um aluno existente ou digite o nome de um novo aluno.")
     else:
         # Filtra alunos para exibir apenas os que não estão excluídos no momento atual
         alunos_ativos = {
             nome: dados for nome, dados in session['alunos'].items()
             if 'data_exclusao' not in dados or datetime.now() < datetime.strptime(dados['data_exclusao'], '%Y-%m-%d')
         }
-        return render_template('adicionar_evento.html', alunos=alunos_ativos, grupos_alimentos=session['grupos_alimentos'])
+        return render_template('adicionar_evento.html', 
+                               alunos=alunos_ativos, 
+                               grupos_alimentos=session['grupos_alimentos'], 
+                               alunos_restricoes={nome: dados.get('restricoes', []) for nome, dados in session['alunos'].items()})
 
 @main_bp.route('/gerenciar_grupos', methods=['GET', 'POST'])
 @login_required
