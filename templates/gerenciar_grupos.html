@@ -95,15 +95,15 @@
 
                     <ul id="grupo_{{ loop.index }}" class="hidden mt-2 ml-6">
                         {% for alimento in alimentos %}
-                        <li class="flex items-center mb-2">
+                       <li class="flex items-center justify-between mb-2 group">
                             <span class="text-gray-800">{{ alimento }}</span>
                             <form method="POST" class="ml-4">
                                 <input type="hidden" name="acao" value="excluir_alimento">
                                 <input type="hidden" name="grupo" value="{{ grupo }}">
                                 <input type="hidden" name="alimento" value="{{ alimento }}">
                                 <button type="submit" 
-                                        class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition duration-300">
-                                    Excluir
+                                        class="text-red-500 hover:text-red-700 transition duration-300 font-bold text-lg px-2 rounded-full hover:bg-red-100">
+                                    &times;
                                 </button>
                             </form>
                         </li>
