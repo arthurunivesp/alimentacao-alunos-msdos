@@ -1,6 +1,9 @@
 from flask import Flask
 from jinja2 import Environment
 from datetime import datetime
+import os
+
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'  # Diretório temporário para evitar erro no Vercel
 
 app = Flask(__name__)
 app.secret_key = 'minha_chave_secreta_123'  # Defina uma chave secreta
