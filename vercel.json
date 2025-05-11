@@ -13,14 +13,10 @@
       "dest": "__init__.py"
     }
   ],
-  "build": {
-    "env": {
-      "PIP_NO_BINARY": "reportlab"
-    },
-    "commands": [
-      "yum install -y libjpeg-turbo-devel freetype-devel libpng-devel",
-      "pip install -r requirements.txt"
-    ]
+  "buildCommand": "bash build.sh",
+  "env": {
+    "PIP_NO_BINARY": "reportlab"
   }
 }
+
 
