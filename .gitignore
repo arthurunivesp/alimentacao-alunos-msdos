@@ -13,3 +13,4 @@ static/menos_consumidos.png
 # IDE
 .vscode/
 .idea/
+.vercel
