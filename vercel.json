@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "__init__.py",
-      "use": "@vercel/python"
-    }
-  ],
   "routes": [
     {
       "src": "/(.*)",
@@ -17,6 +11,7 @@
     "PIP_NO_BINARY": "reportlab"
   }
 }
+
 
 
 
