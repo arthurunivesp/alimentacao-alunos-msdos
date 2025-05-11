@@ -8,16 +8,29 @@ import matplotlib
 matplotlib.use('Agg')  # Define o backend para geração de gráficos sem interface gráfica
 import matplotlib.pyplot as plt
 import seaborn as sns  # Biblioteca para gráficos mais bonitos
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image  # Adicione Image aqui
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 # ================== CONFIGURAÇÃO INICIAL ==================
 # Define caminhos críticos usando caminho relativo
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMP_DIR = "/tmp" if os.getenv("VERCEL") else STATIC_DIR  # Usa /tmp no Vercel, static localmente
+PDF_DIR = os.path.join(TEMP_DIR, "pdfs")
 
-# Garante que a pasta static existe localmente
+# Garante que a pasta static e PDF existem localmente
 if not os.getenv("VERCEL") and not os.path.exists(STATIC_DIR):
     os.makedirs(STATIC_DIR)
+if not os.path.exists(PDF_DIR):
+    os.makedirs(PDF_DIR)
 
 main_bp = Blueprint('main', __name__)
 
@@ -239,18 +252,18 @@ def adicionar_evento():
             try:
                 data = datetime.strptime(data_str, '%Y-%m-%d').date()
             except ValueError:
-                return render_template('adicionar_evento.html', 
-                                       alunos=session['alunos'], 
-                                       grupos_alimentos=session['grupos_alimentos'], 
+                return render_template('adicionar_evento.html',
+                                       alunos=session['alunos'],
+                                       grupos_alimentos=session['grupos_alimentos'],
                                        error="Formato de data inválido.")
 
             # Verifica se o aluno está excluído a partir de uma data
             if aluno_nome in session['alunos'] and 'data_exclusao' in session['alunos'][aluno_nome]:
                 data_exclusao = datetime.strptime(session['alunos'][aluno_nome]['data_exclusao'], '%Y-%m-%d').date()
                 if data >= data_exclusao:
-                    return render_template('adicionar_evento.html', 
-                                           alunos=session['alunos'], 
-                                           grupos_alimentos=session['grupos_alimentos'], 
+                    return render_template('adicionar_evento.html',
+                                           alunos=session['alunos'],
+                                           grupos_alimentos=session['grupos_alimentos'],
                                            error=f"O aluno {aluno_nome} foi excluído a partir de {data_exclusao.strftime('%Y-%m-%d')}. Não é possível adicionar eventos após essa data.")
 
             # Verifica se o aluno consumiu algum alimento restrito
@@ -258,9 +271,9 @@ def adicionar_evento():
                 restricoes = session['alunos'][aluno_existente].get('restricoes', [])
                 alimentos_restritos_consumidos = [alimento for alimento in alimentos if alimento in restricoes]
                 if alimentos_restritos_consumidos and not observacoes:
-                    return render_template('adicionar_evento.html', 
-                                           alunos=session['alunos'], 
-                                           grupos_alimentos=session['grupos_alimentos'], 
+                    return render_template('adicionar_evento.html',
+                                           alunos=session['alunos'],
+                                           grupos_alimentos=session['grupos_alimentos'],
                                            error=f"O aluno {aluno_nome} consumiu alimentos restritos ({', '.join(alimentos_restritos_consumidos)}). O campo 'Observações' é obrigatório nesse caso.")
 
             data_str = data.strftime('%Y-%m-%d')  # Convertendo data para string
@@ -281,9 +294,9 @@ def adicionar_evento():
             session.modified = True
             return redirect(url_for('main.calendario'))
         else:
-            return render_template('adicionar_evento.html', 
-                                   alunos=session['alunos'], 
-                                   grupos_alimentos=session['grupos_alimentos'], 
+            return render_template('adicionar_evento.html',
+                                   alunos=session['alunos'],
+                                   grupos_alimentos=session['grupos_alimentos'],
                                    error="Por favor, selecione um aluno existente ou digite o nome de um novo aluno.")
     else:
         # Filtra alunos para exibir apenas os que não estão excluídos no momento atual
@@ -291,9 +304,9 @@ def adicionar_evento():
             nome: dados for nome, dados in session['alunos'].items()
             if 'data_exclusao' not in dados or datetime.now() < datetime.strptime(dados['data_exclusao'], '%Y-%m-%d')
         }
-        return render_template('adicionar_evento.html', 
-                               alunos=alunos_ativos, 
-                               grupos_alimentos=session['grupos_alimentos'], 
+        return render_template('adicionar_evento.html',
+                               alunos=alunos_ativos,
+                               grupos_alimentos=session['grupos_alimentos'],
                                alunos_restricoes={nome: dados.get('restricoes', []) for nome, dados in session['alunos'].items()})
 
 @main_bp.route('/gerenciar_grupos', methods=['GET', 'POST'])
@@ -336,7 +349,7 @@ def gerenciar_grupos():
 @login_required
 def dashboard():
     init_session()
-    
+
     # Inicialização segura de todas as variáveis
     graf_grupos = graf_alimentos = False
     relatorio_mensal = {}
@@ -346,7 +359,7 @@ def dashboard():
 
     # Captura e tratamento de parâmetros
     aluno_selecionado = request.args.get('aluno', session.get('last_aluno', ''))
-    
+
     # Lógica de datas padrão para teste
     mes_selecionado = 4  # Abril
     ano_selecionado = 2025
@@ -370,12 +383,12 @@ def dashboard():
     # Debug controlado
     print(f"""
     ========== DASHBOARD DEBUG ==========
-    Aluno: {aluno_selecionado} 
-      → Válido: {aluno_selecionado in session['alunos']}
-    Mês: {mes_selecionado} 
-      → Válido: {1 <= mes_selecionado <= 12}
+    Aluno: {aluno_selecionado}
+        → Válido: {aluno_selecionado in session['alunos']}
+    Mês: {mes_selecionado}
+        → Válido: {1 <= mes_selecionado <= 12}
     Ano: {ano_selecionado}
-      → Válido: {2020 <= ano_selecionado <= 2030}
+        → Válido: {2020 <= ano_selecionado <= 2030}
     ======================================
     """)
 
@@ -408,10 +421,10 @@ def dashboard():
     # Processamento principal
     try:
         calendario = session.get('calendario_alimentacao', {})
-        
+
         for data_str, eventos in calendario.items():
             data = datetime.strptime(data_str, "%Y-%m-%d").date()
-            
+
             if data.month == mes_selecionado and data.year == ano_selecionado:
                 for evento in eventos:
                     if evento.get('aluno') == aluno_selecionado:
@@ -424,9 +437,9 @@ def dashboard():
                             relatorio_mensal[alimento] = relatorio_mensal.get(alimento, 0) + 1
 
         # Cálculos estatísticos
-        if relatorio_mensal:  
-            total_geral = sum(relatorio_mensal.values())  
-            
+        if relatorio_mensal:
+            total_geral = sum(relatorio_mensal.values())
+
             # Porcentagem por grupo
             consumo_por_grupo = {}
             for grupo, alimentos in session['grupos_alimentos'].items():
@@ -434,10 +447,10 @@ def dashboard():
                 if total_grupo > 0:
                     consumo_por_grupo[grupo] = total_grupo
                     porcentagem_grupos[grupo] = (total_grupo / total_geral) * 100
-                    
+
                     # Porcentagem por alimento dentro do grupo
                     porcentagem_alimentos_por_grupo[grupo] = {
-                        a: (relatorio_mensal[a] / total_grupo * 100) 
+                        a: (relatorio_mensal[a] / total_grupo * 100)
                         for a in alimentos if a in relatorio_mensal
                     }
 
@@ -449,7 +462,7 @@ def dashboard():
                     plt.figure(figsize=(10, 6))
                     sns.set_theme(style="whitegrid")
                     ax = sns.barplot(
-                        x=[v for k, v in grupos_ordenados], 
+                        x=[v for k, v in grupos_ordenados],
                         y=[k for k, v in grupos_ordenados],
                         palette="Blues_d"
                     )
@@ -458,19 +471,19 @@ def dashboard():
                     plt.ylabel("Grupo de Alimento", fontsize=14)
                     plt.xticks(fontsize=12)
                     plt.yticks(fontsize=12)
-                    
+
                     # Adiciona porcentagens
                     for p in ax.patches:
                         width = p.get_width()
                         ax.text(
-                            width + 0.1, 
-                            p.get_y() + p.get_height()/2., 
-                            f'{width} ({(width / total_geral):.1%})',  
-                            ha='left', 
-                            va='center', 
+                            width + 0.1,
+                            p.get_y() + p.get_height()/2.,
+                            f'{width} ({(width / total_geral):.1%})',
+                            ha='left',
+                            va='center',
                             fontsize=12
                         )
-                    
+
                     grupos_chart_path = os.path.join(TEMP_DIR, "grupos_mais_consumidos.png")
                     plt.savefig(grupos_chart_path, bbox_inches='tight', dpi=150)
                     plt.close()
@@ -490,7 +503,7 @@ def dashboard():
                     plt.figure(figsize=(10, 6))
                     sns.set_theme(style="whitegrid")
                     ax = sns.barplot(
-                        x=[v for k, v in alimentos_ordenados], 
+                        x=[v for k, v in alimentos_ordenados],
                         y=[k for k, v in alimentos_ordenados],
                         palette="Greens_d"
                     )
@@ -499,19 +512,19 @@ def dashboard():
                     plt.ylabel("Alimento", fontsize=14)
                     plt.xticks(fontsize=12)
                     plt.yticks(fontsize=12)
-                    
+
                     # Adiciona porcentagens
                     for p in ax.patches:
                         width = p.get_width()
                         ax.text(
-                            width + 0.1, 
-                            p.get_y() + p.get_height()/2., 
-                            f'{width} ({(width / total_geral):.1%})',  
-                            ha='left', 
-                            va='center', 
+                            width + 0.1,
+                            p.get_y() + p.get_height()/2.,
+                            f'{width} ({(width / total_geral):.1%})',
+                            ha='left',
+                            va='center',
                             fontsize=12
                         )
-                    
+
                     alimentos_chart_path = os.path.join(TEMP_DIR, "alimentos_mais_consumidos.png")
                     plt.savefig(alimentos_chart_path, bbox_inches='tight', dpi=150)
                     plt.close()
@@ -682,6 +695,194 @@ def deletar_aluno():
             except Exception as e:
                 print(f"Erro ao marcar aluno como excluído: {str(e)}")
                 return "Erro ao processar a exclusão do aluno."
-    
+
     return render_template('deletar_aluno.html', alunos=session['alunos'])
+
+@main_bp.route('/selecionar_periodo_pdf', methods=['GET', 'POST'])
+@login_required
+def selecionar_periodo_pdf():
+    init_session()
+    aluno_pdf = request.args.get('aluno_pdf')
+    if not aluno_pdf or aluno_pdf not in session['alunos']:
+        flash('Aluno inválido para gerar o relatório.', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    if request.method == 'POST':
+        mes_inicio_str = request.form.get('mes_inicio')
+        ano_inicio_str = request.form.get('ano_inicio')
+        mes_fim_str = request.form.get('mes_fim')
+        ano_fim_str = request.form.get('ano_fim')
+
+        try:
+            data_inicio = datetime(int(ano_inicio_str), int(mes_inicio_str), 1).date()
+            # Obtém o último dia do mês de fim
+            _, ultimo_dia = monthrange(int(ano_fim_str), int(mes_fim_str))
+            data_fim = datetime(int(ano_fim_str), int(mes_fim_str), ultimo_dia).date()
+
+            return redirect(url_for('main.gerar_pdf', aluno=aluno_pdf, data_inicio=data_inicio.strftime('%Y-%m-%d'), data_fim=data_fim.strftime('%Y-%m-%d')))
+        except ValueError:
+            flash('Datas de período inválidas.', 'error')
+            return render_template('selecionar_periodo_pdf.html', aluno=aluno_pdf, meses=range(1, 13), anos=range(2020, 2030))
+
+    return render_template('selecionar_periodo_pdf.html', aluno=aluno_pdf, meses=range(1, 13), anos=range(2020, 2030))
+
+@main_bp.route('/gerar_pdf', methods=['GET', 'POST'])
+@login_required
+def gerar_pdf():
+    init_session()
+    if request.method == 'POST':
+        aluno_nome = request.form.get('aluno_nome_pdf')
+        periodo = request.form.get('periodo')
+        data_inicio_str = request.form.get('data_inicial')
+        data_fim_str = request.form.get('data_final')
+
+        print(f"Aluno Nome: {aluno_nome}")
+        print(f"Período: {periodo}")
+        print(f"Data Inicial: {data_inicio_str}")
+        print(f"Data Final: {data_fim_str}")
+        print(f"Alunos na Sessão: {session.get('alunos')}")
+
+        if not aluno_nome or aluno_nome not in session['alunos']:
+            flash('Parâmetros inválidos para gerar o relatório.', 'error')
+            return redirect(url_for('main.dashboard'))
+
+        # Determinar datas com base no período
+        today = datetime.now().date()
+        if periodo == 'diario':
+            data_inicio = today
+            data_fim = today
+        elif periodo == 'semanal':
+            data_inicio = today - timedelta(days=today.weekday())  # Início da semana (segunda-feira)
+            data_fim = data_inicio + timedelta(days=6)  # Fim da semana (domingo)
+        elif periodo == 'mensal':
+            data_inicio = today.replace(day=1)
+            data_fim = data_inicio.replace(day=monthrange(today.year, today.month)[1])
+        elif periodo == 'intervalo' and data_inicio_str and data_fim_str:
+            try:
+                data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+                data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Formato de data inválido.', 'error')
+                return redirect(url_for('main.dashboard'))
+        else:
+            flash('Período ou datas inválidas.', 'error')
+            return redirect(url_for('main.dashboard'))
+
+        print(f"Data Início (obj): {data_inicio}")
+        print(f"Data Fim (obj): {data_fim}")
+
+        print("Iniciando a geração do PDF...")
+        nome_arquivo_pdf = os.path.join(PDF_DIR, f"relatorio_{aluno_nome.replace(' ', '_')}_{data_inicio.strftime('%Y-%m-%d')}_{data_fim.strftime('%Y-%m-%d')}.pdf")
+        doc = SimpleDocTemplate(nome_arquivo_pdf, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+
+        story.append(Paragraph(f"Relatório de Alimentação de {aluno_nome}", styles['Heading1']))
+        story.append(Spacer(1, 0.2*inch))
+        story.append(Paragraph(f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}", styles['Heading3']))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Contar alimentos consumidos
+        relatorio_alimentos = {}
+        restricoes = session['alunos'].get(aluno_nome, {}).get('restricoes', [])
+        avancos_restricoes = 0
+        for data_str, eventos in session.get('calendario_alimentacao', {}).items():
+            data_evento = datetime.strptime(data_str, '%Y-%m-%d').date()
+            if data_inicio <= data_evento <= data_fim:
+                for evento in eventos:
+                    if evento['aluno'] == aluno_nome:
+                        for alimento in evento.get('alimentos', []):
+                            relatorio_alimentos[alimento] = relatorio_alimentos.get(alimento, 0) + 1
+                            if alimento in restricoes and 'observacoes' in evento and evento['observacoes']:
+                                avancos_restricoes += 1
+
+        # Grupos de alimentos mais consumidos
+        consumo_por_grupo = {}
+        for grupo, alimentos in session['grupos_alimentos'].items():
+            total_grupo = sum(relatorio_alimentos.get(a, 0) for a in alimentos if a in relatorio_alimentos)
+            if total_grupo > 0:
+                consumo_por_grupo[grupo] = total_grupo
+
+        grupos_ordenados = sorted(consumo_por_grupo.items(), key=lambda x: x[1], reverse=True)[:3]
+        story.append(Paragraph("Grupos de Alimentos Mais Consumidos:", styles['Heading2']))
+        for grupo, qtd in grupos_ordenados:
+            story.append(Paragraph(f"- {grupo}: {qtd} vezes", styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Alimentos mais consumidos
+        alimentos_ordenados = sorted(relatorio_alimentos.items(), key=lambda x: x[1], reverse=True)[:5]
+        story.append(Paragraph("Alimentos Mais Consumidos:", styles['Heading2']))
+        for alimento, qtd in alimentos_ordenados:
+            story.append(Paragraph(f"- {alimento}: {qtd} vezes", styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Avanço na alimentação (restrições)
+        story.append(Paragraph("Avanço na Alimentação:", styles['Heading2']))
+        if restricoes:
+            story.append(Paragraph(f"O aluno tem as seguintes restrições: {', '.join(restricoes)}", styles['Normal']))
+            if avancos_restricoes > 0:
+                story.append(Paragraph(f"Houve {avancos_restricoes} ocasiões em que o aluno consumiu alimentos de sua restrição com observações registradas, indicando progresso.", styles['Normal']))
+            else:
+                story.append(Paragraph("Não houve registro de consumo de alimentos restritos com observações neste período.", styles['Normal']))
+        else:
+            story.append(Paragraph("O aluno não possui restrições registradas.", styles['Normal']))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Gerar gráfico de avanço
+        if restricoes and relatorio_alimentos:
+            plt.figure(figsize=(4, 3))
+            restricoes_consumidas = sum(1 for a in relatorio_alimentos if a in restricoes)
+            plt.bar(['Alimentos Restritivos', 'Outros Alimentos'], [restricoes_consumidas, len(relatorio_alimentos) - restricoes_consumidas], color=['#FF9999', '#66B2FF'])
+            plt.title('Distribuição de Consumo')
+            plt.ylabel('Quantidade')
+            plt.savefig(os.path.join(TEMP_DIR, 'avanco_alimentacao.png'), bbox_inches='tight', dpi=100)
+            plt.close()
+
+            story.append(Paragraph("Gráfico de Avanço na Alimentação:", styles['Heading2']))
+            story.append(Image(os.path.join(TEMP_DIR, 'avanco_alimentacao.png'), width=200, height=150))
+        else:
+            story.append(Paragraph("Não foi possível gerar um gráfico devido à ausência de restrições ou dados insuficientes.", styles['Normal']))
+
+        if not story[-1].__class__.__name__ == 'Spacer':
+            story.append(Paragraph("Fim do Relatório", styles['Normal']))
+
+        doc.build(story)
+
+        print(f"PDF gerado com sucesso e salvo em: {nome_arquivo_pdf}")
+        return send_file(nome_arquivo_pdf, as_attachment=True, download_name=f"relatorio_{aluno_nome.replace(' ', '_')}_{data_inicio.strftime('%Y-%m-%d')}_{data_fim.strftime('%Y-%m-%d')}.pdf")
+    else:
+        return redirect(url_for('main.dashboard'))
+          
+@main_bp.route('/excluir_evento', methods=['POST'])
+@login_required
+def excluir_evento():
+    init_session()
+    data_excluir = request.form.get('data')
+    aluno_excluir = request.form.get('aluno')
+    refeicao_excluir = request.form.get('refeicao')
+    alimentos_excluir = request.form.get('alimentos')  # Recebe como string separada por vírgula
+
+    if data_excluir and aluno_excluir and refeicao_excluir and alimentos_excluir:
+        try:
+            data_obj = datetime.strptime(data_excluir, '%Y-%m-%d').date()
+            data_str_fmt = data_obj.strftime('%Y-%m-%d')
+            if data_str_fmt in session['calendario_alimentacao']:
+                eventos = session['calendario_alimentacao'][data_str_fmt]
+                alimentos_list = [a.strip() for a in alimentos_excluir.split(',')]
+                session['calendario_alimentacao'][data_str_fmt] = [
+                    evento for evento in eventos
+                    if not (evento['aluno'] == aluno_excluir and
+                            evento['refeicao'] == refeicao_excluir and
+                            set(evento['alimentos']) == set(alimentos_list))
+                ]
+                session.modified = True
+                flash('Evento excluído com sucesso.', 'success')
+            else:
+                flash('Data do evento não encontrada.', 'error')
+        except ValueError:
+            flash('Formato de data inválido.', 'error')
+    else:
+        flash('Parâmetros de exclusão inválidos.', 'error')
+
+    return redirect(url_for('main.calendario'))
 

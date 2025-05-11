@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Selecionar Período do Relatório</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #123C3C; /* Azul escuro esverdeado */
+        }
+    </style>
+</head>
+<body class="bg-[#123C3C] text-white min-h-screen">
+    <div class="container mx-auto p-6">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Selecionar Período do Relatório para {{ aluno }}</h2>
+            <form method="POST" action="{{ url_for('main.gerar_pdf') }}">
+                <input type="hidden" name="aluno_nome_pdf" value="{{ aluno }}">
+                <div class="mb-4">
+                    <label class="block text-gray-800 mb-2">Período:</label>
+                    <select name="periodo" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800" onchange="mostrarOcultarIntervalo(this.value)">
+                        <option value="diario">Diário</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="mensal" selected>Mensal</option>
+                        <option value="intervalo">Intervalo de Datas</option>
+                    </select>
+                </div>
+                <div id="data-fields" class="mb-4">
+                    <label class="block text-gray-800 mb-2">Data Inicial:</label>
+                    <input type="date" name="data_inicial" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800" required>
+                    <label class="block text-gray-800 mt-2 mb-2">Data Final:</label>
+                    <input type="date" name="data_final" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800" required>
+                </div>
+                <button type="submit" class="bg-green-500 text-white p-3 rounded-lg hover:bg-green-700 transition duration-300">Gerar PDF</button>
+                <a href="{{ url_for('main.dashboard') }}" class="bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400 transition duration-300 ml-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const dataFields = document.getElementById('data-fields');
+        const periodoSelect = document.querySelector('select[name="periodo"]');
+
+        function mostrarOcultarIntervalo(periodo) {
+            if (periodo === 'intervalo') {
+                dataFields.style.display = 'block';
+                document.querySelectorAll('#data-fields input').forEach(input => input.removeAttribute('disabled'));
+            } else {
+                dataFields.style.display = 'none';
+                document.querySelectorAll('#data-fields input').forEach(input => input.setAttribute('disabled', 'disabled'));
+            }
+        }
+
+        // Garante que o campo de intervalo seja ajustado por padrão
+        document.addEventListener('DOMContentLoaded', function() {
+            mostrarOcultarIntervalo(periodoSelect.value);
+        });
+    </script>
+</body>
+</html>
