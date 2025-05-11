@@ -3,8 +3,7 @@
   "builds": [
     {
       "src": "__init__.py",
-      "use": "@vercel/python",
-      "config": { "pythonVersion": "3.12" }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
@@ -18,6 +17,7 @@
     "PIP_NO_BINARY": "reportlab"
   }
 }
+
 
 
 
