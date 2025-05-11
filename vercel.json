@@ -1,17 +1,26 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "__init__.py",
-        "use": "@vercel/python",
-        "config": { "pythonVersion": "3.12" }
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "__init__.py"
-      }
+  "version": 2,
+  "builds": [
+    {
+      "src": "__init__.py",
+      "use": "@vercel/python",
+      "config": { "pythonVersion": "3.12" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "__init__.py"
+    }
+  ],
+  "build": {
+    "env": {
+      "PIP_NO_BINARY": "reportlab"
+    },
+    "commands": [
+      "yum install -y libjpeg-turbo-devel freetype-devel libpng-devel",
+      "pip install -r requirements.txt"
     ]
   }
-  
+}
+
