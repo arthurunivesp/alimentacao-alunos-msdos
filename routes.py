@@ -545,135 +545,66 @@ def serve_temp_file(filename):
 @login_required
 def consulta_diaria():
     init_session()
-    mes_selecionado = request.args.get('mes')
-    ano_selecionado = request.args.get('ano')
     data_selecionada = request.args.get('data')
+    aluno_selecionado = request.args.get('aluno')  # Pegando o aluno da requisição
+    consulta_diaria = []
+    consulta_data = None
 
-    # Validação e definição do período
-    try:
-        mes_selecionado = int(mes_selecionado) if mes_selecionado else datetime.now().month
-        ano_selecionado = int(ano_selecionado) if ano_selecionado else datetime.now().year
-    except (ValueError, TypeError) as e:
-        print(f"Erro na conversão de mês/ano: {str(e)}")
-        mes_selecionado, ano_selecionado = datetime.now().month, datetime.now().year
-
-    # Define o intervalo do mês
-    primeiro_dia = datetime(ano_selecionado, mes_selecionado, 1).date()
-    ultimo_dia = datetime(ano_selecionado, mes_selecionado, monthrange(ano_selecionado, mes_selecionado)[1]).date()
-
-    # Organiza todos os eventos por aluno e data
-    eventos_por_aluno = {}
-    calendario_alimentacao = session.get("calendario_alimentacao", {})
-    for data_str, eventos in calendario_alimentacao.items():
-        data = datetime.strptime(data_str, "%Y-%m-%d").date()
-        if primeiro_dia <= data <= ultimo_dia:
-            for evento in eventos:
-                aluno = evento['aluno']
-                if aluno not in eventos_por_aluno:
-                    eventos_por_aluno[aluno] = []
-                # Verifica se o aluno está excluído na data do evento
-                if aluno in session['alunos'] and 'data_exclusao' in session['alunos'][aluno]:
-                    data_exclusao = datetime.strptime(session['alunos'][aluno]['data_exclusao'], '%Y-%m-%d').date()
-                    if data >= data_exclusao:
-                        continue
-                eventos_por_aluno[aluno].append({
-                    'data': data,
-                    'evento': evento
-                })
-
-    # Ordena os eventos de cada aluno por data (do mais recente ao mais antigo)
-    for aluno in eventos_por_aluno:
-        eventos_por_aluno[aluno].sort(key=lambda x: x['data'], reverse=True)
-
-    # Se uma data específica foi selecionada, filtra os eventos dessa data
-    consulta_diaria = {}
     if data_selecionada:
         try:
             data = datetime.strptime(data_selecionada, '%Y-%m-%d').date()
-            for aluno, eventos in eventos_por_aluno.items():
-                eventos_na_data = [e for e in eventos if e['data'] == data]
-                if eventos_na_data:
-                    consulta_diaria[aluno] = eventos_na_data
+            calendario_alimentacao = {
+                datetime.strptime(data_str, "%Y-%m-%d").date() if isinstance(data_str, str) else data_str: eventos
+                for data_str, eventos in session.get("calendario_alimentacao", {}).items()
+            }
+            if data in calendario_alimentacao:
+                consulta_diaria = [
+                    {
+                        'aluno': evento['aluno'],
+                        'refeicao': evento['refeicao'],
+                        'alimentos': evento['alimentos'],
+                        'observacoes': evento.get('observacoes', '')
+                    }
+                    for evento in calendario_alimentacao[data]
+                    if not aluno_selecionado or evento['aluno'] == aluno_selecionado
+                ]
+                consulta_data = data_selecionada
+            else:
+                print(f"Data {data} não encontrada em calendario_alimentacao")
         except ValueError as e:
             print(f"Erro ao converter data {data_selecionada}: {e}")
 
-    # Se nenhuma data foi selecionada, mostra o último evento de cada aluno
-    else:
-        for aluno, eventos in eventos_por_aluno.items():
-            if eventos:
-                ultima_data = eventos[0]['data']
-                consulta_diaria[aluno] = [e for e in eventos if e['data'] == ultima_data]
+    print(f"Consulta Diária - Data: {data_selecionada}, Aluno: {aluno_selecionado}, Resultado: {consulta_diaria}")
 
-    # Gera listas de datas disponíveis para navegação por aluno
-    datas_por_aluno = {}
-    for aluno, eventos in eventos_por_aluno.items():
-        datas_por_aluno[aluno] = sorted({e['data'].strftime('%Y-%m-%d') for e in eventos}, reverse=True)
-
-    # Obtém as restrições de cada aluno
+    # Passando restrições para o template
     restricoes_por_aluno = {nome: session['alunos'][nome].get('restricoes', []) for nome in session['alunos'].keys()}
 
-    print(f"Consulta Diária - Mês: {mes_selecionado}, Ano: {ano_selecionado}, Data Selecionada: {data_selecionada}, Resultado: {consulta_diaria}")
-
-    # Dados para os gráficos (mantendo a lógica original)
-    mais_consumidos = {}
-    menos_consumidos = {}
-    relatorio_mensal = {}
-    for aluno, eventos in eventos_por_aluno.items():
-        for evento_dict in eventos:
-            for alimento in evento_dict['evento']['alimentos']:
-                relatorio_mensal[alimento] = relatorio_mensal.get(alimento, 0) + 1
-
-    if relatorio_mensal:
-        ordenado = sorted(relatorio_mensal.items(), key=lambda x: x[1], reverse=True)
-        mais_consumidos = dict(ordenado[:5])
-        menos_consumidos = dict(ordenado[-5:])
-
-        plt.figure(figsize=(8, 6))
-        sns.barplot(x=list(mais_consumidos.values()), y=list(mais_consumidos.keys()), hue=list(mais_consumidos.keys()), palette="Blues_d", legend=False)
-        plt.title("Alimentos Mais Consumidos", fontsize=14, pad=20)
-        plt.xlabel("Quantidade", fontsize=12)
-        plt.ylabel("Alimentos", fontsize=12)
-        plt.tight_layout()
-        plt.savefig(os.path.join(TEMP_DIR, "mais_consumidos.png"))
-        plt.close()
-
-        plt.figure(figsize=(8, 6))
-        sns.barplot(x=list(menos_consumidos.values()), y=list(menos_consumidos.keys()), hue=list(menos_consumidos.keys()), palette="Reds_d", legend=False)
-        plt.title("Alimentos Menos Consumidos", fontsize=14, pad=20)
-        plt.xlabel("Quantidade", fontsize=12)
-        plt.ylabel("Alimentos", fontsize=12)
-        plt.tight_layout()
-        plt.savefig(os.path.join(TEMP_DIR, "menos_consumidos.png"))
-        plt.close()
-
-    mais_consumidos_exists = os.path.exists(os.path.join(TEMP_DIR, "mais_consumidos.png"))
-    menos_consumidos_exists = os.path.exists(os.path.join(TEMP_DIR, "menos_consumidos.png"))
-
+    # Dados necessários para o template (mantendo compatibilidade com dashboard.html)
     alunos_ativos = {
         nome: dados for nome, dados in session['alunos'].items()
         if 'data_exclusao' not in dados or datetime.now() < datetime.strptime(dados['data_exclusao'], '%Y-%m-%d')
     }
-
     user_role = session.get('role', '')
 
     return render_template(
         'dashboard.html',
         consulta_diaria=consulta_diaria,
-        consulta_data=data_selecionada,
-        mes_selecionado=mes_selecionado,
-        ano_selecionado=ano_selecionado,
-        datas_por_aluno=datas_por_aluno,
+        consulta_data=consulta_data,
         alunos=alunos_ativos,
-        aluno_selecionado=None,  # Não usamos mais aluno_selecionado aqui
-        mais_consumidos=mais_consumidos,
-        menos_consumidos=menos_consumidos,
-        relatorio_mensal=relatorio_mensal,
+        aluno_selecionado=aluno_selecionado,
+        mes_selecionado=None,  # Não usamos mais mes_selecionado aqui
+        ano_selecionado=None,  # Não usamos mais ano_selecionado aqui
+        relatorio_mensal={},  # Valores padrão para evitar erros
         grupos_alimentos=session.get('grupos_alimentos', {}),
         meses=range(1, 13),
         anos=range(2020, 2030),
-        mais_consumidos_exists=mais_consumidos_exists,
-        menos_consumidos_exists=menos_consumidos_exists,
+        grupos_mais_consumidos_exists=False,
+        alimentos_mais_consumidos_exists=False,
+        porcentagem_grupos={},
+        porcentagem_alimentos_por_grupo={},
+        total_geral=0,
         user_role=user_role,
+        restricoes_aluno=[],
         restricoes_por_aluno=restricoes_por_aluno
     )
 
@@ -883,3 +814,4 @@ def excluir_evento():
 
     return redirect(url_for('main.calendario'))
 
+    
